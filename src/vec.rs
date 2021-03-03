@@ -261,6 +261,38 @@ impl<T> IndexMut<usize> for ManVec<T> {
   }
 }
 
+
+// form  ManVec<T>  to slice   解引用来实现
+use std::ops::Deref;
+
+impl<T> Deref for ManVec<T> {
+    type Target = [T];
+    fn deref(&self) -> &[T] {
+        unsafe {
+            std::slice::from_raw_parts(self.ptr, self.len)
+        }
+    }
+}
+
+use std::ops::DerefMut;
+
+impl<T> DerefMut for ManVec<T> {
+    fn deref_mut(&mut self) -> &mut [T] {
+        unsafe {
+            std::slice::from_raw_parts_mut(self.ptr, self.len)
+        }
+    }
+}
+
+
+
+pub fn get_all<T:Debug>(a:&[T]) {
+  for x in a {
+    println!("{:?}",x);
+  }
+}
+
+
 /*
 impl<T> Index<Range<usize>> for ManVec<T> {
   type Output = [T];

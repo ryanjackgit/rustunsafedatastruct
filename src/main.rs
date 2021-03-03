@@ -1,5 +1,5 @@
 
-use rustunsafedatastruct::vec::ManVec;
+use rustunsafedatastruct::vec::{self,ManVec};
 use rustunsafedatastruct::list::List;
 use rustunsafedatastruct::tree::Tree;
 use rustunsafedatastruct::bsttree::BSTTree;
@@ -83,8 +83,33 @@ fn main() {
       None => {},
     };
 
-   
+    let m1=My {
+      c:32,
+      z:Box::new("replaced".to_string()),
+      x:Weizhi::CC(32),
+    };
+
+   v.insert(2,m1);
+
+   match v.get_mut(2) {
+    Some(mut c) => {println!("this is the data:{:?}",c)},
+    None => {},
+  };
+
+  v.remove(2);
+
+  match v.get_mut(2) {
+    Some(mut c) => {println!("this two is the data:{:?}",c)},
+    None => {},
+  };
+
+  let  xx=&*v;
+ // for x in xx {
+    println!("the x is {:?}",&xx[1..3]);
+ // }
     //v.printlnall();
+
+    vec::get_all(&v);
 
     let mut list=List::new();
     for i in 0..10 {
