@@ -8,7 +8,7 @@ use rustunsafedatastruct::hashmap::HashMap;
 use rustunsafedatastruct::quicksortbinarysearch;
 use rustunsafedatastruct::time::TimerWatch;
 
-use std::cmp::{Eq};
+use std::cmp::Eq;
 
 use std::hash::{Hash,Hasher};
 
@@ -18,13 +18,6 @@ enum Weizhi {
   DD,
 }
 
-/*
-impl Drop for Weizhi {
-  fn drop(&mut self) {
-    println!("weizhi descrtor {:?}",self);
-  }
-}
-*/
 
 #[derive(Debug)]
 struct My{
@@ -109,7 +102,7 @@ fn main() {
  // }
     //v.printlnall();
 
-    vec::get_all(&v);
+
 
     let mut list=List::new();
     for i in 0..10 {

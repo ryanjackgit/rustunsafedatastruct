@@ -2,8 +2,7 @@
 use crate::vec::ManVec;
 
 
-
-pub fn binary_search<T>(key: &T, m: &ManVec<T>) -> Option<usize>
+pub fn binary_search<T>(key: &T, m: &[T]) -> Option<usize>
     where T:Ord {
 
     let mut low = 0;
@@ -22,7 +21,7 @@ pub fn binary_search<T>(key: &T, m: &ManVec<T>) -> Option<usize>
     None
 }
 
-pub fn quick_sort<T>(a: &mut ManVec<T>, lo: isize, hi: isize)
+pub fn quick_sort<T>(a: &mut [T], lo: isize, hi: isize)
     where T:Ord  {
 
     if hi <= lo {
@@ -36,11 +35,10 @@ pub fn quick_sort<T>(a: &mut ManVec<T>, lo: isize, hi: isize)
     quick_sort(a, lt + 1, hi);
 }
 
-fn partition<T>(a: &mut ManVec<T>, lo: isize, hi: isize) -> isize
+fn partition<T>(a: &mut [T], lo: isize, hi: isize) -> isize
     where T:Ord  {
     let mut i=lo;
     let mut j=hi;
-  
 
     loop {
 

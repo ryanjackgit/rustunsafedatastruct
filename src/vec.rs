@@ -11,7 +11,6 @@ pub struct ManVec<T> {
 }
 
 
-
 impl <T> ManVec<T> {
   pub fn len(&self) -> usize {
     self.len
@@ -286,31 +285,21 @@ impl<T> DerefMut for ManVec<T> {
 
 
 
-pub fn get_all<T:Debug>(a:&[T]) {
-  for x in a {
-    println!("{:?}",x);
-  }
+#[test]
+pub fn test_vec_slice() {
+  let mut v=ManVec::new();
+  v.push(2);
+  v.push(3);
+  v.push(4);
+  let v_slice:&[i32]=&v;
+  assert_eq!(&v_slice[0..2],&[2,3]);
+  let v_slice:&mut [i32]=&mut v;
+  v_slice[1]=4;
+  assert_eq!(&v_slice[0..2],&[2,4]);
+  v_slice.sort();
+  assert_eq!(&v_slice[0..3],&[2,4,4]);
+  assert_eq!(v_slice.binary_search(&2),Ok(0));
 }
-
-
-/*
-impl<T> Index<Range<usize>> for ManVec<T> {
-  type Output = [T];
-
-  fn index(&self, index: Range<usize>) -> &Self::Output {
-      & self[index.start..index.end]
-  }
-}
-
-impl<T> IndexMut<Range<usize>> for ManVec<T> {
-  
-
-  fn index_mut(&mut self, index: Range<usize>) -> &mut Self::Output {
-      &mut self[index.start..index.end]
-  }
-}
-*/
-
 
 
 
