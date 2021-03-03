@@ -7,19 +7,19 @@ Vector
 
 双向list 
 
-一般二叉树 
+Binary tree 
 
-搜索二叉树 
+Binary search tree
 
-堆 
+Heap 
 
 hashmap 
 
-快速排序 
+QuickSort
 
-二分搜索 
+Binary search
 
 以及双向list的iterator into_iter的引用，可变引用，by value的实现
 
 
-本项目适合于对Rust语言有兴趣且有一定Rust编写经验的人查看，对初学者也有很好的指导作用
+本项目适合于对Rust语言有兴趣且有一定Rust编写经验的人学习标准库中常用数据结构的实现，对初学者也有很好的指导作用
