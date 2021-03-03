@@ -5,6 +5,7 @@ use std::fmt::Debug;
 use std::ops::{Index,IndexMut,Range};
 
 pub struct ManVec<T> {
+  // in std implemention,ptr is a  Unique<T> ,It's own type T,if T is Send/Sync,Vec<T> is Send/Sync.
     ptr: *mut T,
     cap:usize,
     len:usize,
