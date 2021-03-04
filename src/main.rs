@@ -245,37 +245,26 @@ for (x,y) in  selfiterator {
   println!("key:{:?},value:{}",x,y);
 }
 
-
-
-
-   use rand::random;
    let mut vec=ManVec::new() ;
-   let mut vv:u32=0;
+
    let count=10000;
   for i in 0..count {
-       let x: u32 = random();
-    //   print!("  {} is {}  max:{}",i,x,u32::MAX);
-      vv=x;
-       vec.push(x);
+      
+       vec.push(i);
   }
+
+  quicksortbinarysearch::shuffle(&mut vec);
 
    let last = vec.len() - 1 ;
    let begin=TimerWatch::new();
    quicksortbinarysearch::quick_sort(&mut vec, 0, last as isize);
    
 
-   /*
-  for i in 0..count {
-       println!("the value is {:?}",vec[i]);
-   }
+   let find = &109;
 
-   */
+   let index = quicksortbinarysearch::binary_search(find, &vec);
 
-   let find = vv;
-
-   let index = quicksortbinarysearch::binary_search(&find, &vec);
-
-   println!(" vv :{} index is {}",vv,index.unwrap());
+   println!(" vv :{} index is {}",find,index.unwrap());
    println!("the sort take time {} millis",begin.passed());
 
 

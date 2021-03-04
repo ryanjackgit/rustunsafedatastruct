@@ -69,6 +69,19 @@ fn partition<T>(a: &mut [T], lo: isize, hi: isize) -> isize
 }
 
 
+use rand::{thread_rng, Rng};
+use rand::seq::SliceRandom;
+
+pub fn shuffle<T>(a:&mut [T])
+    where T:Ord {
+
+    let mut rng = thread_rng();
+
+    a.shuffle(&mut rng);
+
+}
+
+
 #[test]
 pub fn test_sort() {
     let mut v=ManVec::new();
@@ -77,6 +90,7 @@ pub fn test_sort() {
     v.push(3);
     v.push(2);
     v.push(0);
+    shuffle(&mut v);
     let len=v.len()-1;
     quick_sort(&mut v,0,len as isize);
 
