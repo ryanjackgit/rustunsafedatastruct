@@ -69,4 +69,39 @@ fn partition<T>(a: &mut [T], lo: isize, hi: isize) -> isize
 }
 
 
+#[test]
+pub fn test_sort() {
+    let mut v=ManVec::new();
+    v.push(1);
+    v.push(5);
+    v.push(3);
+    v.push(2);
+    v.push(0);
+    let len=v.len()-1;
+    quick_sort(&mut v,0,len as isize);
+
+    let vv:&[i32]=&v;
+
+    assert_eq!(&vv[..],&[0,1,2,3,5]);
+}
+
+
+#[test]
+pub fn test_binary_search() {
+    let mut v=ManVec::new();
+    v.push(1);
+    v.push(5);
+    v.push(3);
+    v.push(2);
+    v.push(0);
+    let len=v.len()-1;
+    quick_sort(&mut v,0,len as isize);
+
+    let vv:&[i32]=&v;
+
+    assert_eq!(&vv[..],&[0,1,2,3,5]);
+
+    assert_eq!(Some(4),binary_search(&5,&vv));
+}
+
 

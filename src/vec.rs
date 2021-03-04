@@ -13,6 +13,7 @@ pub struct ManVec<T> {
 
 
 impl <T> ManVec<T> {
+  
   pub fn len(&self) -> usize {
     self.len
   }

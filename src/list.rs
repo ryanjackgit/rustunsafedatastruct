@@ -208,7 +208,7 @@ impl <T> List<T> {
     pub fn remove_current(&mut self,t:&T) 
          where T:Eq  {
              let exist_flag=self.find(t);
-     println!("{}",exist_flag);
+  
            if exist_flag {
 
             if let Some(mut ptrone) =self.head {
