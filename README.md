@@ -11,6 +11,8 @@ Binary tree
 
 Binary search tree
 
+redblack tree
+
 Heap 
 
 hashmap 
