@@ -7,6 +7,7 @@ use rustunsafedatastruct::maxheap::MaxHeap;
 use rustunsafedatastruct::hashmap::HashMap;
 use rustunsafedatastruct::quicksortbinarysearch;
 use rustunsafedatastruct::time::TimerWatch;
+use rustunsafedatastruct::redblacktree;
 
 use std::cmp::Eq;
 
@@ -129,21 +130,6 @@ fn main() {
       list.list();
 
 
-//for i in 0..100000 {
-  /*
-    for i in 0..1 {
-      let  pn=std::ptr::null_mut();
-      let mut left_leaf=Tree::create_node(Weizhi::DD,pn,pn);
-      let mut right_leaf=Tree::create_node(Weizhi::DD,pn,pn);
-     let mut left=Tree::create_node(Weizhi::CC(i),left_leaf,right_leaf);
-    
-      let mut right=Tree::create_node(Weizhi::CC(i+1),pn,pn);
-      let node=Tree::create_node(Weizhi::CC(i+2),left,right);
-      let mut root=Tree::new_as_node(node);
-      root.last_root();
-    }
-    */
-//}
 let mut root=BSTTree::newnew() ;
 let  pn=std::ptr::null_mut();
 let mut node=BSTTree::create_node(4,pn,pn);
@@ -267,5 +253,23 @@ for (x,y) in  selfiterator {
    println!(" vv :{} index is {}",find,index.unwrap());
    println!("the sort take time {} millis",begin.passed());
 
+   let mut m = redblacktree::RedBlackTree::new();
+
+   let begin=TimerWatch::new();
+
+   for i in 0..10000 {
+   m.insert(i, i+1);
+   }
+
+
+   println!("the RedBlackTree insert  take time {} millis",begin.passed());
+
+
+   m.replace_or_insert(999999, 4);
+
+   
+  println!("the result is {:?}",m.get(&999999));
+
+   
 
 }
