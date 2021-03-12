@@ -187,6 +187,8 @@ impl <K:Ord+Default+Debug,V:Default> Node<K,V> {
 
 }
 
+//  impl <K:Ord+Default+Debug,V:Default> Drop for Node<K,V>
+
 pub struct SkipList<K:Ord+Default+Debug,V:Default> { 
     root:NodePtr<K,V>,
     level:usize,
@@ -367,17 +369,21 @@ pub fn find_mut(&mut self,k:&K) -> Option<&mut V> {
 
 
 
-pub fn find_node_for_delete(&mut self,k:&K) -> Option<*mut Node<K,V>> {
+pub fn remove(&mut self,k:&K)  {
 
     let null=NodePtr::new();
+    //标记最终要删除的节点
+    let mut last_find_node=NodePtr::new();
 
     let mut currentLevel=self.root.get_level();
     let mut current_p=self.root;
     let head=self.root;
+    let mut prev=self.root;
 
     for i in (0..currentLevel).rev() {
-    
+        
         current_p= head.get_level_pointer(i);
+
         if  current_p==null || current_p.get_key() > k {
             continue;
         }
@@ -388,20 +394,33 @@ pub fn find_node_for_delete(&mut self,k:&K) -> Option<*mut Node<K,V>> {
              
                 break;
             } else {
+                prev=current_p;
                 current_p=current_p.get_level_pointer(i);
             }
               
         }
+      
         if  current_p.get_key()==k {
-            let v= unsafe {
-                current_p.0
-                
-            };
-            return Some(v);
+
+             prev.set_level_pointer(i,current_p.get_level_pointer(i));
+             last_find_node=current_p;
            }       
     }
 
-    None
+    if last_find_node==null {
+        println!("not find this node");
+        return;
+    }
+
+    unsafe {
+        //需释放数据所占用的空间,特别指出,free the space.
+        let layout=Layout::new::<Node<K,V>>();    
+        ptr::drop_in_place(&mut (*(last_find_node.0)).data as *mut (K,V));
+
+        ptr::drop_in_place(&mut (*last_find_node.0).vecPtr as *mut ManVec<NodePtr<K,V>>);
+        alloc::dealloc(last_find_node.0 as *mut u8,layout);
+       }
+ 
 }
 
 
@@ -440,48 +459,6 @@ fn find_path(&self,k:&K) -> ManVec<NodePtr<K,V>> {
     path_save
 }
 
-pub fn remove(&mut self,k:&K) {
-
-    let mut node=self.find_node_for_delete(k);
-
-    if node.is_none() {
-        println!("no this key data!");
-        return;
-    }
-
-    let mut node=node.unwrap();
-    let node= unsafe {
-             & (*node)
-    };
-
-    let level=node.get_level();
-    println!("delete node  -------------------level {} ",level);
-    let mut before_vec=self.find_path(k);
-    if before_vec.len()==0 {
-       
-    }
-    println!("path ------------len {} ",before_vec.len());
-    
-    let mut i=0;
-
-    for j in (0..before_vec.len()).rev() {
-        if i==level {
-            println!("java and rust -------------------i==level");
-            break;
-        }
-        let next=node.get_level_pointer(i);
-        before_vec[j].set_level_pointer(i, next);
-        i+=1;
-    }
-
-    for i in level..before_vec.len() {
-        if self.root.get_level_pointer(i).is_null() {
-            self.root.pop();
-        }
-    }
-
-
-}
 
 // 抛硬币决定节点有几层
 pub fn flipCoin(&mut self) -> bool {    
@@ -492,8 +469,6 @@ pub fn flipCoin(&mut self) -> bool {
 		false
     }
 }
-
-
 
 }
 
@@ -571,7 +546,12 @@ fn test_skiplist() {
   v.insert((41,8));
   assert_eq!(v.find(&41),Some(&8));
 
+ v.remove(&41);
+ assert_eq!(v.find(&41),None);
 
+
+  v.remove(&70);
+  assert_eq!(v.find(&70),None);
 
 }
 
