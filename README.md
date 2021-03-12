@@ -5,7 +5,9 @@
 
 Vector
 
-双向list 
+doubled list 
+
+Skiplist
 
 Binary tree 
 
