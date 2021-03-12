@@ -1,8 +1,7 @@
-use std::alloc::{self, dealloc, Layout};
+use std::alloc::{self, Layout};
 use std::ptr;
-use std::mem;
-use std::fmt::Debug;
-use std::marker::PhantomData;
+
+
 
 /*
 *x = equals to ::write for raw pointers, No!
@@ -18,6 +17,7 @@ std::ptr::write(c,t) is right.  *t=c; is a UB.
 
 
 */
+
 
 struct Node<T> {
    data:T,

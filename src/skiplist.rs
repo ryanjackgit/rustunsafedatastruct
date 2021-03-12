@@ -1,0 +1,461 @@
+use std::alloc::{self, dealloc, Layout};
+use std::ptr;
+use std::mem;
+use std::fmt::Debug;
+use crate::vec::ManVec;
+use std::cmp::{Ord,Ordering,Eq,PartialEq};
+use rand::{thread_rng, Rng};
+use rand::rngs::StdRng;
+use rand::SeedableRng;
+use rand::rngs::ThreadRng;
+
+
+/*
+  **********      **********     **********
+  *    *   *      *    *   *
+  *    *   *      *    *   *
+  * x  * * *      *  5 * * *     
+  *    *   *      *    *   *
+  *    * * *      *    * * *
+  *    *   *      *    *   *
+  **********      * ********                                                                                                                         
+      *
+      *
+      *
+    sentinel
+     root
+
+
+*/
+
+// skiplist max level
+const MAX_LEVEL:usize=32;
+
+#[derive(Debug)]
+pub struct NodePtr<K:Ord+Default+Debug,V:Default>(*mut Node<K,V>);
+
+impl<K:Ord+Default+Debug,V:Default> Clone for NodePtr<K, V> {
+    fn clone(&self) -> NodePtr<K, V> {
+        NodePtr(self.0)
+    }
+}
+
+impl<K:Ord+Default+Debug,V:Default> Copy for NodePtr<K, V> {}
+
+impl<K:Ord+Default+Debug,V:Default> Ord for NodePtr<K, V> {
+    fn cmp(&self, other: &NodePtr<K, V>) -> Ordering {
+        unsafe { (*self.0).data.0.cmp(&(*other.0).data.0) }
+    }
+}
+
+impl<K:Ord+Default+Debug,V:Default> PartialOrd for NodePtr<K, V> {
+    fn partial_cmp(&self, other: &NodePtr<K, V>) -> Option<Ordering> {
+        unsafe { Some((*self.0).data.0.cmp(&(*other.0).data.0)) }
+    }
+}
+
+impl<K:Ord+Default+Debug,V:Default> PartialEq for NodePtr<K, V> {
+
+    fn eq(&self, other: &NodePtr<K, V>) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl<K:Ord+Default+Debug,V:Default> Eq for NodePtr<K, V> {}
+
+impl<K:Ord+Default+Debug,V:Default> NodePtr<K, V> {
+
+
+    fn new() -> Self {
+        NodePtr(ptr::null_mut())
+    }
+
+    fn is_null(&self) -> bool {
+         self.0.is_null()
+    }
+
+
+    pub fn get_level(&self) -> usize {
+        unsafe {
+            (*self.0).get_level()
+        }
+    }
+
+    pub fn set_level_pointer(&mut self,index:usize,pointer:NodePtr<K,V>) -> bool {
+        unsafe {
+            (*self.0).set_level_pointer(index,pointer)
+        }
+    }
+
+    pub fn get_level_pointer(&self,index:usize) -> NodePtr<K,V>{
+        unsafe {
+            (*self.0).get_level_pointer(index)
+        }
+    }
+
+    pub fn put_newnodePtr(&mut self,pointer:NodePtr<K,V>) {
+        unsafe {
+            (*self.0).put_newnodePtr(pointer)
+        }
+    }
+
+    pub fn get_key(&self) -> &K {
+        unsafe {
+            (*(self.0)).get_key()
+        }
+    }
+
+    pub fn get_value(&self) ->&V {
+        unsafe {
+            (*self.0).get_value()
+        }
+    }
+
+}
+
+pub struct Node<K:Ord+Default+Debug,V:Default> {
+    data:(K,V),
+    vecPtr:ManVec<NodePtr<K,V>>,
+}
+
+impl <K:Ord+Default+Debug,V:Default> Node<K,V> {
+
+    pub fn new(data:(K,V)) -> NodePtr<K, V> {
+     
+        let layout=Layout::new::<Node<K,V>>();
+        let node= unsafe {
+           let c= alloc::alloc(layout) as *mut Node<K,V>;
+             
+           let mut data_pointer=&mut ((*c).data) as *mut (K,V);
+           ptr::write(data_pointer,data);
+           let mut ptr=ManVec::new();
+           let mut data_pointer=&mut ((*c).vecPtr) as *mut ManVec<NodePtr<K,V>>;
+           ptr::write(data_pointer,ptr);   
+           c
+        };
+
+        NodePtr(node)
+
+    }
+
+    pub fn get_level(&self) -> usize {
+        self.vecPtr.len()
+    }
+
+    pub fn set_level_pointer(&mut self,index:usize,pointer:NodePtr<K,V>) -> bool {
+        if let Some(mut p)=self.vecPtr.get_mut(index) {
+            *p=pointer;
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn get_level_pointer(&self,index:usize) -> NodePtr<K,V> {
+        if let Some(p)=self.vecPtr.get(index) {       
+           *p
+        } else {
+            NodePtr::new()
+        }
+    }
+
+    pub fn put_newnodePtr(&mut self,pointer:NodePtr<K,V>) {
+        self.vecPtr.push(pointer);
+    }
+
+    pub fn get_key(&self) ->&K {
+        &self.data.0
+    }
+
+    pub fn get_value(&self) ->&V {
+        &self.data.1
+    }
+
+    pub fn get_mut_value(&mut self) ->&mut V {
+        &mut self.data.1
+    }
+
+}
+
+pub struct SkipList<K:Ord+Default+Debug,V:Default> { 
+    root:NodePtr<K,V>,
+    level:usize,
+
+    //也可以不需要，主要为了抛硬币随机，每个跳表实例种子应该不同
+    rng:ThreadRng,
+}
+
+impl<K:Ord+Default+Debug,V:Default>  SkipList<K,V> {
+
+    pub fn new() ->  Self {
+        let mut m=Node::new((K::default(),V::default()));
+        let level=MAX_LEVEL;
+        let mut rng = rand::thread_rng();
+        SkipList {
+            root:m,
+            level:level,
+           // rngInstance:StdRng::seed_from_u64(seed),
+           rng:rng,
+        }
+    }
+
+
+
+pub fn insert(&mut self,mut data:(K,V)) {
+
+    let mut null=NodePtr::new();
+
+    //计算随机高度
+    let mut true_count=1;
+    for _ in 0..self.level {
+    if self.flipCoin() {
+       true_count+=1;
+    }
+    }
+
+    println!("insert ,the random size is {}",true_count);
+      //作为第一个节点加入
+   if self.root.get_level()==0 {
+  
+    let mut newNodePtr=Node::new(data);
+    for i in 0..true_count {
+          //哨兵高度随着增长，各层均指向该节点
+        self.root.put_newnodePtr(newNodePtr);
+          //右边哨兵高度以内指针全部设为null
+        newNodePtr.put_newnodePtr(null);
+       }
+     }   else {
+       if let Some(ptr)=self.find_mut(&data.0) {
+     
+           std::mem::swap(ptr,&mut data.1);
+           return;
+       }
+       
+         let mut newNodePtr=Node::new(data);
+
+         for i in 0..true_count {         
+            //右边高度以内指针全部设为null
+          newNodePtr.put_newnodePtr(null);
+         }
+
+         let rootLen=self.root.get_level();
+    
+         let mut path=self.find_path(newNodePtr.get_key());
+
+           let path_len=path.len();
+           println!("path.len:{}",path_len);
+           let len=newNodePtr.get_level();
+           println!("newNodePtr.len:{}",len);
+           println!("root.len:{}",rootLen);
+
+           let mut i=0;
+          //只需要插入与新节点层度相同
+            for j in (0..path_len).rev() {
+                if i==len {
+                 
+                    break;
+                }
+          //      println!("the pop p is  {:?}",path[j].get_key());
+              
+          //      println!("i is is {}",i);
+                //矫正各级指针指向
+                let next=path[j].get_level_pointer(i);
+                newNodePtr.set_level_pointer(i,next);
+                path[j].set_level_pointer(i,newNodePtr);
+
+                i+=1;
+            }
+
+            if rootLen< true_count {
+                //增高跟节点的总体高度，并把指针值指向新节点
+                let gap=true_count-rootLen;
+                println!("gap is {}",gap);
+                for i in 0..gap {
+                   self.root.put_newnodePtr(newNodePtr);
+               
+                  // newNodePtr.set_level_pointer(path_len+i,null_nodeptr);
+                }
+            }
+
+            println!("--------------insert end");
+    
+    }
+}
+
+pub fn find(&self,k:&K) -> Option<&V> {
+
+    let null=NodePtr::new();
+    let mut currentLevel=self.root.get_level();
+    let mut current_p=self.root;
+    let head=self.root;
+
+    for i in (0..currentLevel).rev() {
+    
+        current_p= head.get_level_pointer(i);
+
+        if  current_p==null || current_p.get_key() > k  {
+            continue;
+        }
+     
+        while current_p.get_key()< k  {
+            
+            if current_p.get_level_pointer(i) ==null  {             
+                break;
+            } else {
+                current_p=current_p.get_level_pointer(i);
+            }
+              
+        }
+
+        if  current_p.get_key()==k {
+            let v= unsafe {
+                (*current_p.0).get_value()
+                
+            };
+            return Some(v);
+
+           } 
+       
+    }
+
+
+    None
+
+}
+
+
+pub fn find_mut(&mut self,k:&K) -> Option<&mut V> {
+    
+    let null=NodePtr::new();
+
+    let mut currentLevel=self.root.get_level();
+    let mut current_p=self.root;
+    let head=self.root;
+
+    for i in (0..currentLevel).rev() {
+    
+        current_p= head.get_level_pointer(i);
+        if  current_p==null || current_p.get_key() > k {
+            continue;
+        }
+        while current_p.get_key()< k  {
+            
+            if current_p.get_level_pointer(i) ==null  {
+             
+                break;
+            } else {
+                current_p=current_p.get_level_pointer(i);
+            }
+              
+        }
+        if  current_p.get_key()==k {
+            let v= unsafe {
+                (*current_p.0).get_mut_value()
+                
+            };
+            return Some(v);
+           }       
+    }
+
+    None
+}
+
+
+// 为查找插入点记录其各层前驱指针
+fn find_path(&self,k:&K) -> ManVec<NodePtr<K,V>> {
+
+    println!("the key is {:?}",k);
+    let mut path_save=ManVec::new();
+
+    let  null=NodePtr::new();
+
+    let mut currentLevel=self.root.get_level();
+
+    let mut pre=null;
+    let mut current_p=null;
+    let head=self.root;
+
+    for i in (0..currentLevel).rev() {
+
+        current_p=head.get_level_pointer(i);
+        if  current_p==null || current_p.get_key() > k {
+            path_save.push(head);
+            continue;
+        }
+
+        while current_p.get_key()< k  {
+            if current_p.get_level_pointer(i) ==null || current_p.get_level_pointer(i).get_key() > k {
+                path_save.push(current_p);
+                break;
+            } else {
+                current_p=current_p.get_level_pointer(i);
+            }
+        }
+    }
+
+    path_save
+}
+
+pub fn remove(k:&K) {
+
+
+}
+
+// 抛硬币决定节点有几层
+pub fn flipCoin(&mut self) -> bool {    
+    let rand:u32=self.rng.gen();
+	if (rand%4) == 1 {
+	    true
+    } else {
+		false
+    }
+}
+
+
+
+}
+
+
+#[test]
+fn test_skiplist() {
+
+
+  let mut v=SkipList::new();
+  
+  v.insert((1,6));
+ assert_eq!(v.find(&1),Some(&6));
+  v.insert((4,7));
+  assert_eq!(v.find(&4),Some(&7));
+
+  v.insert((5,6));
+  assert_eq!(v.find(&5),Some(&6));
+  v.insert((6,8));
+  assert_eq!(v.find(&6),Some(&8));
+
+  v.insert((9,11));
+  assert_eq!(v.find(&9),Some(&11));
+
+  v.insert((9,50));
+  assert_eq!(v.find(&9),Some(&50));
+
+  
+  v.insert((70,50));
+  assert_eq!(v.find(&70),Some(&50));
+  
+
+  v.insert((7,8));
+  assert_eq!(v.find(&7),Some(&8));
+
+  v.insert((40,8));
+  assert_eq!(v.find(&40),Some(&8));
+
+  v.insert((41,8));
+  assert_eq!(v.find(&41),Some(&8));
+
+
+
+}
+
+
+
+

@@ -10,9 +10,7 @@ pub struct RedBlackTree<K: Ord, V> {
     len: usize,
 }
 
-
 impl<K: Ord, V> Drop for RedBlackTree<K, V> {
-
     fn drop(&mut self) {
         self.clear();
     }
@@ -20,7 +18,6 @@ impl<K: Ord, V> Drop for RedBlackTree<K, V> {
 
 
 impl<K: Ord, V> RedBlackTree<K, V> {
-   
     pub fn new() -> Self {
         RedBlackTree {
             root: Node::null(),
@@ -28,13 +25,11 @@ impl<K: Ord, V> RedBlackTree<K, V> {
         }
     }
 
-  
-    pub fn len(&self) -> usize {
+pub fn len(&self) -> usize {
         self.len
     }
 
-
-    pub fn is_empty(&self) -> bool {
+pub fn is_empty(&self) -> bool {
         self.root.is_null()
     }
 
@@ -358,30 +353,36 @@ impl<K: Ord, V> RedBlackTree<K, V> {
 
 
     fn clear_recurse(&mut self, current: Node<K, V>) {
+        
         if !current.is_null() {
             unsafe {
                 self.clear_recurse(current.left());
                 self.clear_recurse(current.right());
       
-               let data=ptr::read(current.0 as *const RedBlackTreeNode<K,V>);
+               ptr::drop_in_place(&mut (*(current.0)).data as *mut (K,V));
+
                let layout=Layout::new::<RedBlackTreeNode<K,V>>();
                alloc::dealloc(current.0 as *mut u8,layout);
             }
         }
+        
     }
+    
 
- 
+       
     pub fn clear(&mut self) {
         let root = self.root;
+        /*
+        if !root.is_null() {
+            drop_middle_root(root.0);
+        }
+*/
+        
         self.root = Node::null();
         self.clear_recurse(root);
+        
     }
 
-    /// Empties the `RBTree` without freeing objects in it.
-
-    fn fast_clear(&mut self) {
-        self.root = Node::null();
-    }
 
     pub fn remove(&mut self, k: &K) -> Option<V> {
         let node = self.find_node(k);
@@ -550,6 +551,38 @@ impl<K: Ord, V> RedBlackTree<K, V> {
         return data.data;
     }
 }
+
+/*    按中序遍历方式释放每个节点内存空间,也可以按上代码中的clear_recurse方式
+pub fn drop_middle_root<K:Ord,V>(root:*mut RedBlackTreeNode<K,V>) {
+    let layout=Layout::new::<RedBlackTreeNode<K,V>>();
+    unsafe {
+   
+    
+       let  ss_root=root;
+
+
+     if !(*ss_root).left.is_null() {
+        
+        let p_root=(*ss_root).left;
+        drop_middle_root(p_root.0);
+    }
+
+        if !(*ss_root).right.is_null() {
+         
+            let p_root= (*ss_root).right;
+          
+           drop_middle_root(p_root.0);
+         
+       
+          }
+
+       std::ptr::drop_in_place(&mut (*root).data as *mut (K,V));
+       alloc::dealloc(root as *mut u8,layout);
+     
+}
+
+}
+*/
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 enum Color {

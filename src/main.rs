@@ -8,6 +8,7 @@ use rustunsafedatastruct::hashmap::HashMap;
 use rustunsafedatastruct::quicksortbinarysearch;
 use rustunsafedatastruct::time::TimerWatch;
 use rustunsafedatastruct::redblacktree;
+use rustunsafedatastruct::skiplist::SkipList;
 
 use std::cmp::Eq;
 
@@ -253,23 +254,62 @@ for (x,y) in  selfiterator {
    println!(" vv :{} index is {}",find,index.unwrap());
    println!("the sort take time {} millis",begin.passed());
 
+
+
    let mut m = redblacktree::RedBlackTree::new();
-
-   let begin=TimerWatch::new();
-
-   for i in 0..10000 {
+  let begin=TimerWatch::new();
+  
+   for i in 0..100 {
    m.insert(i, i+1);
    }
 
-
    println!("the RedBlackTree insert  take time {} millis",begin.passed());
-
 
    m.replace_or_insert(999999, 4);
 
-   
   println!("the result is {:?}",m.get(&999999));
 
-   
+  let mut v=SkipList::new();
+  
+  v.insert((1,6));
+  println!("find result is {:?}",v.find(&1));
+
+   v.insert((4,7));
+   println!("find result is {:?}",v.find(&4));
+
+ 
+   v.insert((5,6));
+   println!("find result is {:?}",v.find(&5));
+
+   v.insert((6,8));
+   println!("find result is {:?}",v.find(&6));
+
+ 
+
+
+
+  v.insert((6,6));
+
+  println!("find result is {:?}",v.find(&6));
+
+
+
+  v.insert((5,23));
+
+
+  println!("find result is {:?}",v.find(&5));
+
+  v.insert((7,23));
+
+  println!("find result is {:?}",v.find(&7));
+
+  v.insert((4,24));
+
+  println!("find result is {:?}",v.find(&4));
+
+
+  
+
+
 
 }

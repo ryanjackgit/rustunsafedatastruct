@@ -7,3 +7,4 @@ pub mod hashmap;
 pub mod quicksortbinarysearch;
 pub mod time;
 pub mod redblacktree;
+pub mod skiplist;
