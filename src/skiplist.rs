@@ -99,6 +99,12 @@ impl<K:Ord+Default+Debug,V:Default> NodePtr<K, V> {
         }
     }
 
+    pub fn pop(&mut self) {
+        unsafe {
+            (*self.0).pop()
+        }
+    }
+
     pub fn get_key(&self) -> &K {
         unsafe {
             (*(self.0)).get_key()
@@ -161,6 +167,10 @@ impl <K:Ord+Default+Debug,V:Default> Node<K,V> {
 
     pub fn put_newnodePtr(&mut self,pointer:NodePtr<K,V>) {
         self.vecPtr.push(pointer);
+    }
+
+    pub fn pop(&mut self) {
+        self.vecPtr.pop();
     }
 
     pub fn get_key(&self) ->&K {
@@ -310,22 +320,17 @@ pub fn find(&self,k:&K) -> Option<&V> {
         if  current_p.get_key()==k {
             let v= unsafe {
                 (*current_p.0).get_value()
-                
             };
             return Some(v);
-
            } 
-       
     }
-
-
     None
 
 }
 
 
 pub fn find_mut(&mut self,k:&K) -> Option<&mut V> {
-    
+
     let null=NodePtr::new();
 
     let mut currentLevel=self.root.get_level();
@@ -351,6 +356,45 @@ pub fn find_mut(&mut self,k:&K) -> Option<&mut V> {
         if  current_p.get_key()==k {
             let v= unsafe {
                 (*current_p.0).get_mut_value()
+                
+            };
+            return Some(v);
+           }       
+    }
+
+    None
+}
+
+
+
+pub fn find_node_for_delete(&mut self,k:&K) -> Option<*mut Node<K,V>> {
+
+    let null=NodePtr::new();
+
+    let mut currentLevel=self.root.get_level();
+    let mut current_p=self.root;
+    let head=self.root;
+
+    for i in (0..currentLevel).rev() {
+    
+        current_p= head.get_level_pointer(i);
+        if  current_p==null || current_p.get_key() > k {
+            continue;
+        }
+        
+        while current_p.get_key()< k  {
+            
+            if current_p.get_level_pointer(i) ==null  {
+             
+                break;
+            } else {
+                current_p=current_p.get_level_pointer(i);
+            }
+              
+        }
+        if  current_p.get_key()==k {
+            let v= unsafe {
+                current_p.0
                 
             };
             return Some(v);
@@ -396,7 +440,45 @@ fn find_path(&self,k:&K) -> ManVec<NodePtr<K,V>> {
     path_save
 }
 
-pub fn remove(k:&K) {
+pub fn remove(&mut self,k:&K) {
+
+    let mut node=self.find_node_for_delete(k);
+
+    if node.is_none() {
+        println!("no this key data!");
+        return;
+    }
+
+    let mut node=node.unwrap();
+    let node= unsafe {
+             & (*node)
+    };
+
+    let level=node.get_level();
+    println!("delete node  -------------------level {} ",level);
+    let mut before_vec=self.find_path(k);
+    if before_vec.len()==0 {
+       
+    }
+    println!("path ------------len {} ",before_vec.len());
+    
+    let mut i=0;
+
+    for j in (0..before_vec.len()).rev() {
+        if i==level {
+            println!("java and rust -------------------i==level");
+            break;
+        }
+        let next=node.get_level_pointer(i);
+        before_vec[j].set_level_pointer(i, next);
+        i+=1;
+    }
+
+    for i in level..before_vec.len() {
+        if self.root.get_level_pointer(i).is_null() {
+            self.root.pop();
+        }
+    }
 
 
 }
@@ -413,6 +495,43 @@ pub fn flipCoin(&mut self) -> bool {
 
 
 
+}
+
+impl <K:Ord+Default+Debug,V:Default> Drop for SkipList<K,V> {
+    fn drop(&mut self) {
+       
+        let null=NodePtr::new();
+        if self.root==null {
+            return;
+        }
+        let mut ptr=self.root;
+        let layout=Layout::new::<Node<K,V>>();    
+        unsafe {            
+            loop {
+
+                 let mut free_flag=false;
+                 let mut p_free=ptr;
+                  if !ptr.get_level_pointer(0).is_null() {                    
+                    ptr=ptr.get_level_pointer(0);
+                } else {
+                    free_flag=true;
+                }
+  
+                     //需释放数据所占用的空间,特别指出,free the space.
+                     ptr::drop_in_place(&mut (*(p_free.0)).data as *mut (K,V));
+                
+                     ptr::drop_in_place(&mut (*p_free.0).vecPtr as *mut ManVec<NodePtr<K,V>>);
+                     alloc::dealloc(p_free.0 as *mut u8,layout);
+
+                if free_flag {
+                    break;
+                }   
+               
+             }
+             
+
+         }
+    }
 }
 
 

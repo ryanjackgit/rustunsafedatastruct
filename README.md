@@ -5,7 +5,7 @@
 
 Vector
 
-doubled list 
+doubly  list 
 
 Skiplist
 

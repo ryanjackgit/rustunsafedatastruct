@@ -269,6 +269,9 @@ for (x,y) in  selfiterator {
 
   println!("the result is {:?}",m.get(&999999));
 
+
+
+  
   let mut v=SkipList::new();
   
   v.insert((1,6));
@@ -307,7 +310,9 @@ for (x,y) in  selfiterator {
 
   println!("find result is {:?}",v.find(&4));
 
+  v.remove(&4);
 
+  println!("find result is {:?}",v.find(&4));
   
 
 
