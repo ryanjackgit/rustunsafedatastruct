@@ -87,6 +87,7 @@ impl <T> ManVec<T> {
     assert!(mem::size_of::<T>() != 0, "We're not ready to handle ZSTs");
 
     let ptrone = unsafe {
+      //it's a waste!  
       mem::align_of::<T>() as *mut T
     };
     
@@ -148,7 +149,7 @@ impl <T> ManVec<T> {
   }
 
   pub fn printlnall(&self) {
-    let offset=mem::size_of::<T>() as usize;
+  
     unsafe {
       for i in 0..self.len {
       //  println!("the {} is : {:?}",i,(*(self.ptr.offset(((i)) as isize) as *mut T)));
@@ -164,7 +165,7 @@ impl <T> ManVec<T> {
       //alloc::realloc(self.ptr as *mut u8, layout, self.cap) as *mut T;
       //重新分配并移动就数据到新位置
        let ptr = alloc::alloc(layout);
-      let offset=mem::size_of::<T>() as usize;
+    //  let offset=mem::size_of::<T>() as usize;
 
       ptr::copy_nonoverlapping(self.ptr, ptr as *mut T, self.len);
 
@@ -225,20 +226,26 @@ pub fn remove(&mut self, index: usize) -> T {
 impl<T> Drop for ManVec<T> {
     fn drop(&mut self) {
 
-      let offset=mem::size_of::<T>() as usize;
+   //   let offset=mem::size_of::<T>() as usize;
+  //    println!("the size of T is {}",offset);
+  //    println!("the align of T {}",std::mem::align_of::<T>());
+  if self.cap!=0 {
+
       unsafe {
-        // drop(std::ptr::read())
+       
         for i in 0..self.len {
+           // drop(std::ptr::read())
          ptr::drop_in_place(self.ptr.offset(i as isize) as *mut T);
         }
-      
-       
         //系统回收内存
+
         let layout=Layout::array::<T>(self.cap).unwrap();
+   
         alloc::dealloc(self.ptr as *mut u8, layout);
         }
-     
     }
+
+  }
 }
 
 

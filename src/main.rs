@@ -273,46 +273,22 @@ for (x,y) in  selfiterator {
 
   
   let mut v=SkipList::new();
-  
-  v.insert((1,6));
-  println!("find result is {:?}",v.find(&1));
 
-   v.insert((4,7));
-   println!("find result is {:?}",v.find(&4));
-
- 
-   v.insert((5,6));
-   println!("find result is {:?}",v.find(&5));
-
-   v.insert((6,8));
-   println!("find result is {:?}",v.find(&6));
-
- 
-
-
-
-  v.insert((6,6));
-
-  println!("find result is {:?}",v.find(&6));
-
-
-
-  v.insert((5,23));
-
-
-  println!("find result is {:?}",v.find(&5));
-
-  v.insert((7,23));
-
-  println!("find result is {:?}",v.find(&7));
+  v.insert((1,24));
 
   v.insert((4,24));
+
+  println!("find result is {:?}",v.find(&4));
+
+  v.insert((4,26));
 
   println!("find result is {:?}",v.find(&4));
 
   v.remove(&4);
 
   println!("find result is {:?}",v.find(&4));
+
+
   
 
 

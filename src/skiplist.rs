@@ -117,6 +117,12 @@ impl<K:Ord+Default+Debug,V:Default> NodePtr<K, V> {
         }
     }
 
+    pub fn get_mut_value(&mut self) ->&mut V {
+        unsafe {
+            (*self.0).get_mut_value()
+        }
+    }
+
 }
 
 pub struct Node<K:Ord+Default+Debug,V:Default> {
@@ -237,12 +243,7 @@ pub fn insert(&mut self,mut data:(K,V)) {
         newNodePtr.put_newnodePtr(null);
        }
      }   else {
-       if let Some(ptr)=self.find_mut(&data.0) {
-     
-           std::mem::swap(ptr,&mut data.1);
-           return;
-       }
-       
+
          let mut newNodePtr=Node::new(data);
 
          for i in 0..true_count {         
@@ -252,8 +253,23 @@ pub fn insert(&mut self,mut data:(K,V)) {
 
          let rootLen=self.root.get_level();
     
-         let mut path=self.find_path(newNodePtr.get_key());
+         let  path=self.find_path(&mut newNodePtr);
 
+        if let None=path {
+             println!("had the same value and changed!");
+             //newNodePtr 需要释放
+             unsafe {
+                //需释放数据所占用的空间,特别指出,free the space.
+                let layout=Layout::new::<Node<K,V>>();    
+                ptr::drop_in_place(&mut (*(newNodePtr.0)).data as *mut (K,V));
+        
+                ptr::drop_in_place(&mut (*newNodePtr.0).vecPtr as *mut ManVec<NodePtr<K,V>>);
+                alloc::dealloc(newNodePtr.0 as *mut u8,layout);
+               }
+              
+             return;
+         }
+           let mut path=path.unwrap();
            let path_len=path.len();
            println!("path.len:{}",path_len);
            let len=newNodePtr.get_level();
@@ -293,6 +309,114 @@ pub fn insert(&mut self,mut data:(K,V)) {
     
     }
 }
+
+// 为查找插入点记录其各层前驱指针
+fn find_path(&self,node:&mut NodePtr<K,V>) -> Option<ManVec<NodePtr<K,V>>> {
+
+   // println!("the size of {}",std::mem::size_of::<NodePtr<K, V>>());
+   // println!("the align of {}",std::mem::align_of::<NodePtr<K, V>>());
+    let k=node.get_key();
+
+    let mut path_save=ManVec::new();
+
+    let  null=NodePtr::new();
+
+    let mut currentLevel=self.root.get_level();
+
+    let mut pre=null;
+    let mut current_p=null;
+    let head=self.root;
+
+    for i in (0..currentLevel).rev() {
+
+        current_p=head.get_level_pointer(i);
+        if  current_p==null || current_p.get_key() > k {
+            path_save.push(head);
+            continue;
+        }
+//  || current_p.get_level_pointer(i).get_key() > k
+        while current_p.get_key()< k  {
+            if current_p.get_level_pointer(i) ==null  {
+                path_save.push(current_p);
+                break;
+            } else {
+                current_p=current_p.get_level_pointer(i);
+            }
+        }
+
+        if  current_p.get_key() == k    {
+            std::mem::swap(current_p.get_mut_value(),node.get_mut_value());
+        
+            return None;
+        }
+    }
+
+    Some(path_save)
+}
+
+pub fn remove(&mut self,k:&K)  {
+
+    let null=NodePtr::new();
+    //标记最终要删除的节点
+    let mut last_find_node=NodePtr::new();
+
+    let mut currentLevel=self.root.get_level();
+    let mut current_p=self.root;
+    let mut head=self.root;
+    let mut prev=self.root;
+
+    for i in (0..currentLevel).rev() {
+        
+        current_p= head.get_level_pointer(i);
+
+        if  current_p==null || current_p.get_key() > k {
+            continue;
+        }
+        
+        while current_p.get_key()< k  {
+            
+            if current_p.get_level_pointer(i) ==null  {
+             
+                break;
+            } else {
+                prev=current_p;
+                current_p=current_p.get_level_pointer(i);
+            }
+              
+        }
+      
+        if  current_p.get_key()==k {
+
+             prev.set_level_pointer(i,current_p.get_level_pointer(i));
+             last_find_node=current_p;
+           }       
+    }
+
+    if last_find_node==null {
+        println!("not find this node");
+        return;
+    }
+
+    unsafe {
+        //需释放数据所占用的空间,特别指出,free the space.
+        let layout=Layout::new::<Node<K,V>>();    
+        ptr::drop_in_place(&mut (*(last_find_node.0)).data as *mut (K,V));
+
+        ptr::drop_in_place(&mut (*last_find_node.0).vecPtr as *mut ManVec<NodePtr<K,V>>);
+        alloc::dealloc(last_find_node.0 as *mut u8,layout);
+       }
+
+    //头节点为空连接的同时删除
+    for i in (0..currentLevel).rev() {
+        
+        current_p= head.get_level_pointer(i);
+        if current_p==null {
+            head.pop();
+        }
+    }
+ 
+}
+
 
 pub fn find(&self,k:&K) -> Option<&V> {
 
@@ -368,98 +492,6 @@ pub fn find_mut(&mut self,k:&K) -> Option<&mut V> {
 }
 
 
-
-pub fn remove(&mut self,k:&K)  {
-
-    let null=NodePtr::new();
-    //标记最终要删除的节点
-    let mut last_find_node=NodePtr::new();
-
-    let mut currentLevel=self.root.get_level();
-    let mut current_p=self.root;
-    let head=self.root;
-    let mut prev=self.root;
-
-    for i in (0..currentLevel).rev() {
-        
-        current_p= head.get_level_pointer(i);
-
-        if  current_p==null || current_p.get_key() > k {
-            continue;
-        }
-        
-        while current_p.get_key()< k  {
-            
-            if current_p.get_level_pointer(i) ==null  {
-             
-                break;
-            } else {
-                prev=current_p;
-                current_p=current_p.get_level_pointer(i);
-            }
-              
-        }
-      
-        if  current_p.get_key()==k {
-
-             prev.set_level_pointer(i,current_p.get_level_pointer(i));
-             last_find_node=current_p;
-           }       
-    }
-
-    if last_find_node==null {
-        println!("not find this node");
-        return;
-    }
-
-    unsafe {
-        //需释放数据所占用的空间,特别指出,free the space.
-        let layout=Layout::new::<Node<K,V>>();    
-        ptr::drop_in_place(&mut (*(last_find_node.0)).data as *mut (K,V));
-
-        ptr::drop_in_place(&mut (*last_find_node.0).vecPtr as *mut ManVec<NodePtr<K,V>>);
-        alloc::dealloc(last_find_node.0 as *mut u8,layout);
-       }
- 
-}
-
-
-// 为查找插入点记录其各层前驱指针
-fn find_path(&self,k:&K) -> ManVec<NodePtr<K,V>> {
-
-    println!("the key is {:?}",k);
-    let mut path_save=ManVec::new();
-
-    let  null=NodePtr::new();
-
-    let mut currentLevel=self.root.get_level();
-
-    let mut pre=null;
-    let mut current_p=null;
-    let head=self.root;
-
-    for i in (0..currentLevel).rev() {
-
-        current_p=head.get_level_pointer(i);
-        if  current_p==null || current_p.get_key() > k {
-            path_save.push(head);
-            continue;
-        }
-
-        while current_p.get_key()< k  {
-            if current_p.get_level_pointer(i) ==null || current_p.get_level_pointer(i).get_key() > k {
-                path_save.push(current_p);
-                break;
-            } else {
-                current_p=current_p.get_level_pointer(i);
-            }
-        }
-    }
-
-    path_save
-}
-
-
 // 抛硬币决定节点有几层
 pub fn flipCoin(&mut self) -> bool {    
     let rand:u32=self.rng.gen();
@@ -487,7 +519,7 @@ impl <K:Ord+Default+Debug,V:Default> Drop for SkipList<K,V> {
                  let mut free_flag=false;
                  let mut p_free=ptr;
                   if !ptr.get_level_pointer(0).is_null() {                    
-                    ptr=ptr.get_level_pointer(0);
+                      ptr=ptr.get_level_pointer(0);
                 } else {
                     free_flag=true;
                 }
@@ -513,11 +545,10 @@ impl <K:Ord+Default+Debug,V:Default> Drop for SkipList<K,V> {
 #[test]
 fn test_skiplist() {
 
-
-  let mut v=SkipList::new();
+ let mut v=SkipList::new();
   
   v.insert((1,6));
- assert_eq!(v.find(&1),Some(&6));
+  assert_eq!(v.find(&1),Some(&6));
   v.insert((4,7));
   assert_eq!(v.find(&4),Some(&7));
 
@@ -546,12 +577,34 @@ fn test_skiplist() {
   v.insert((41,8));
   assert_eq!(v.find(&41),Some(&8));
 
- v.remove(&41);
- assert_eq!(v.find(&41),None);
+  v.remove(&41);
+  assert_eq!(v.find(&41),None);
 
 
   v.remove(&70);
   assert_eq!(v.find(&70),None);
+
+  v.remove(&6);
+  assert_eq!(v.find(&6),None);
+
+  v.remove(&9);
+  assert_eq!(v.find(&9),None);
+
+  v.insert((23,56));
+  assert_eq!(v.find(&23),Some(&56));
+
+  v.remove(&23);
+  assert_eq!(v.find(&23),None);
+
+  for i in 100..1000 {
+      v.insert((i,i+1));
+  }
+
+  assert_eq!(v.find(&999),Some(&1000));
+
+  v.remove(&999);
+  assert_eq!(v.find(&999),None);
+
 
 }
 
