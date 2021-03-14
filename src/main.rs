@@ -259,7 +259,7 @@ for (x,y) in  selfiterator {
    let mut m = redblacktree::RedBlackTree::new();
   let begin=TimerWatch::new();
   
-   for i in 0..100 {
+   for i in 100..100000 {
    m.insert(i, i+1);
    }
 
@@ -269,28 +269,31 @@ for (x,y) in  selfiterator {
 
   println!("the result is {:?}",m.get(&999999));
 
-
-
-  
   let mut v=SkipList::new();
 
-  v.insert((1,24));
-
-  v.insert((4,24));
-
-  println!("find result is {:?}",v.find(&4));
-
-  v.insert((4,26));
-
-  println!("find result is {:?}",v.find(&4));
-
-  v.remove(&4);
-
-  println!("find result is {:?}",v.find(&4));
-
-
+  let begin=TimerWatch::new();
   
+  for i in 100..100000 {
+  v.insert((i, i+1));
+  }
 
+
+  println!("the result is {:?}",v.find(&999));
+
+  println!("the SkipList insert  take time {} millis",begin.passed());
+
+
+  v.insert((34, 56));
+  
+  println!("the result is {:?}",v.find(&34));
+
+  v.insert((34, 57));
+  
+  println!("the result is {:?}",v.find(&34));
+
+  v.remove(&34);
+
+  println!("the result is {:?}",v.find(&34));
 
 
 }
