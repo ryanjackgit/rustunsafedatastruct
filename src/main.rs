@@ -259,7 +259,7 @@ for (x,y) in  selfiterator {
    let mut m = redblacktree::RedBlackTree::new();
   let begin=TimerWatch::new();
   
-   for i in 100..100000 {
+   for i in 100..1000 {
    m.insert(i, i+1);
    }
 
@@ -273,7 +273,7 @@ for (x,y) in  selfiterator {
 
   let begin=TimerWatch::new();
   
-  for i in 100..100000 {
+  for i in 100..1000 {
   v.insert((i, i+1));
   }
 
@@ -294,6 +294,16 @@ for (x,y) in  selfiterator {
   v.remove(&34);
 
   println!("the result is {:?}",v.find(&34));
+
+  v.insert((23,100));
+
+  println!("the result is {:?}",v.find(&23));
+
+  v.remove(&23);
+  println!("the result is {:?}",v.find(&23));
+
+  
+
 
 
 }

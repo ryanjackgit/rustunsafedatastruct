@@ -238,7 +238,9 @@ struct Node<K,V> {
      head:Option<*mut Node<K,V>>,    
  }
  
+
  impl <K:Hash+Eq+PartialEq,V> HashTableList<K,V> {
+
      pub fn new() -> Self {
         HashTableList {
              head:None,
@@ -246,6 +248,7 @@ struct Node<K,V> {
      }
  
      pub fn newinit(t:(K,V)) -> Self {
+
          let layout=Layout::new::<Node<K,V>>();
          let node= unsafe {
             let c= alloc::alloc(layout) as *mut Node<K,V>;
@@ -258,17 +261,16 @@ struct Node<K,V> {
      
             c
          };
- 
-   
          HashTableList {
           head:Some(node)
         }
- 
+
      }
  
 
  
      pub fn insert_after(&mut self,t:(K,V)) {
+
          if let Some( mut ptr) = self.head {
              //循环找到最后一个节点
              unsafe {
@@ -319,9 +321,7 @@ struct Node<K,V> {
              let layout=Layout::new::<Node<K,V>>();
                //刚好只有一个节点的删除方法
              if (*ptr).next.is_null() {
-                 let last=ptr::read(&mut (*ptr).data as *mut (K,V));
- 
-              
+                 let last=ptr::read(&mut (*ptr).data as *mut (K,V));              
                  alloc::dealloc(ptr as *mut u8,layout);
                  self.head=None;
                   Some(last)
@@ -652,7 +652,7 @@ fn test_hashmap() {
 }
 
 #[test]
-fn test_hash_other() {
+fn test_hashmap_other() {
     let mut h=HashMap::new();
 
     for i in 0..10000 {
@@ -673,4 +673,19 @@ fn test_hash_other() {
     }
     assert_eq!(h.get(&289), None);
 
+}
+
+
+#[test]
+fn test_listhashtable() {
+
+    let mut hl=HashTableList::new();
+    hl.insert_after((1,5));
+    hl.insert_after((2,5));
+    hl.insert_after((3,5));
+    assert_eq!(hl.remove_after(),Some((3,5)));
+    assert_eq!(hl.remove_after(),Some((2,5)));
+
+    assert_eq!(hl.find(&1),Some(&(1,5)));
+    
 }

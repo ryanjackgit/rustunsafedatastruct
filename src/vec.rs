@@ -3,12 +3,14 @@ use std::ptr;
 use std::mem;
 use std::fmt::Debug;
 use std::ops::{Index,IndexMut,Range};
+use std::marker::PhantomData;
 
 pub struct ManVec<T> {
   // in std implemention,ptr is a  Unique<T> ,It's own type T,if T is Send/Sync,Vec<T> is Send/Sync.
     ptr: *mut T,
     cap:usize,
     len:usize,
+    _marker: PhantomData<T>,
 }
 
 
@@ -78,6 +80,7 @@ impl <T> ManVec<T> {
         ptr:ptrone,
         cap:cap,
         len:0,
+        _marker: PhantomData,
     }
 
   }
@@ -95,6 +98,7 @@ impl <T> ManVec<T> {
           ptr:ptrone,
           cap:0,
           len:0,
+          _marker: PhantomData,
       }
   }
   pub fn newinit(t:T,cap:usize) -> Self  {
@@ -121,6 +125,7 @@ impl <T> ManVec<T> {
           ptr:ptrone,
           cap:cap,
           len:1,
+          _marker: PhantomData,
       }
   }
 
@@ -293,9 +298,13 @@ impl<T> DerefMut for ManVec<T> {
 }
 
 
+unsafe impl<T:Send+Sync> Send for ManVec<T> {}
+//unsafe impl<T:Send+Sync>  Sync for ManVec<T> {}
+
 
 #[test]
 pub fn test_vec_slice() {
+
   let mut v=ManVec::new();
   v.push(2);
   v.push(3);
@@ -308,6 +317,28 @@ pub fn test_vec_slice() {
   v_slice.sort();
   assert_eq!(&v_slice[0..3],&[2,4,4]);
   assert_eq!(v_slice.binary_search(&2),Ok(0));
+  
+}
+
+#[test]
+pub fn test_vec_acrossthread() {
+
+  let mut v=ManVec::new();
+  v.push(2);
+  v.push(3);
+  v.push(4);
+
+ let th=std::thread::spawn(move || {
+  v.push(5);
+  let mut sum=0;
+  for i in 0..4 {
+    sum+=v[i];
+  }
+ assert_eq!(sum,14);
+   });
+
+th.join().unwrap();
+
 }
 
 

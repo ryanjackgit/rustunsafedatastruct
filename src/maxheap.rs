@@ -25,6 +25,7 @@ impl <T:Ord+Debug> MaxHeap<T> {
             data:ManVec::new(),
         }
     }
+
     pub fn push(&mut self,t:T) {
          if self.data.is_null() {
              self.data.push(t);
@@ -80,7 +81,7 @@ impl <T:Ord+Debug> MaxHeap<T> {
 
     }
 
-    pub fn sink(&mut self) {
+     fn sink(&mut self) {
         let len=self.data.len();
        
         if len==0 || len==1 {
@@ -116,5 +117,27 @@ impl <T:Ord+Debug> MaxHeap<T> {
 }
 
 
+#[test]
+fn testMaxHeap() {
 
+   let mut v= MaxHeap::new();
+   v.push(23);
+   v.push(35);
+   v.push(45);
+   if let Some(max)=v.pop() {
+       assert_eq!(max,45);
+   }
 
+   if let Some(max)=v.pop() {
+    assert_eq!(max,35);
+   }
+
+   if let Some(max)=v.peek() {
+    assert_eq!(max,&23);
+   }
+
+   if let Some(max)=v.pop() {
+    assert_eq!(max,23);
+   }
+
+}

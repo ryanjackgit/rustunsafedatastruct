@@ -1,8 +1,6 @@
 use std::alloc::{self, Layout};
 use std::ptr;
 
-
-
 /*
 *x = equals to ::write for raw pointers, No!
 They aren't equivalent. Dereferencing and assigning with = will attempt to drop the LHS value before overwriting with the new one. This code happens to work* because bools don't have destructors, but if you were assigning to some type with one then it would result in a drop call operating on uninitialized memory. Meanwhile ptr::write specifically avoids dropping the LHS before writing over it.
@@ -13,8 +11,7 @@ if t is *mut T , only when T:Copy :
 *t=c; 
 
 otherwise,
-std::ptr::write(c,t) is right.  *t=c; is a UB.
-
+std::ptr::write(c,t) is right.  *t=c; is a UB.Undefined Behave
 
 */
 

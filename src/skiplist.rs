@@ -270,11 +270,9 @@ pub fn insert(&mut self,mut data:(K,V)) {
          }
            let mut path=path.unwrap();
            let path_len=path.len();
-       //    println!("path.len:{}",path_len);
+    
            let len=newNodePtr.get_level();
-       //    println!("newNodePtr.len:{}",len);
-       //     println!("root.len:{}",rootLen);
-
+  
            let mut i=0;
           //只需要插入与新节点层度相同
             for j in (0..path_len).rev() {
@@ -282,9 +280,7 @@ pub fn insert(&mut self,mut data:(K,V)) {
                  
                     break;
                 }
-          //      println!("the pop p is  {:?}",path[j].get_key());
-              
-          //      println!("i is is {}",i);
+       
                 //矫正各级指针指向
                 let next=path[j].get_level_pointer(i);
                 newNodePtr.set_level_pointer(i,next);
@@ -296,15 +292,12 @@ pub fn insert(&mut self,mut data:(K,V)) {
             if rootLen< true_count {
                 //增高跟节点的总体高度，并把指针值指向新节点
                 let gap=true_count-rootLen;
-             //   println!("gap is {}",gap);
                 for i in 0..gap {
                    self.root.put_newnodePtr(newNodePtr);
                
                   // newNodePtr.set_level_pointer(path_len+i,null_nodeptr);
                 }
             }
-
-         //   println!("--------------insert end");
     
     }
 }
@@ -312,8 +305,6 @@ pub fn insert(&mut self,mut data:(K,V)) {
 // 为查找插入点记录其各层前驱指针
 fn find_path(&self,node:&mut NodePtr<K,V>) -> Option<ManVec<NodePtr<K,V>>> {
   
-   // println!("the size of {}",std::mem::size_of::<NodePtr<K, V>>());
-   // println!("the align of {}",std::mem::align_of::<NodePtr<K, V>>());
     let k=node.get_key();
 
     let mut path_save=ManVec::new();
@@ -400,7 +391,7 @@ pub fn remove(&mut self,k:&K)  {
     }
 
     unsafe {
-        //需释放数据所占用的空间,特别指出,free the space.
+        //需释放数据所占用的空间,free the space.
         let layout=Layout::new::<Node<K,V>>();    
         ptr::drop_in_place(&mut (*(last_find_node.0)).data as *mut (K,V));
 
@@ -505,11 +496,10 @@ pub fn find_mut(&mut self,k:&K) -> Option<&mut V> {
     None
 }
 
-
 // 抛硬币决定节点有几层
 pub fn flipCoin(&mut self) -> bool {    
     let rand:u32=self.rng.gen();
-	if (rand%2) == 1 {
+	if (rand%4) == 1 {
 	    true
     } else {
 		false
@@ -558,8 +548,8 @@ impl <K:Ord+Default+Debug,V:Default> Drop for SkipList<K,V> {
 
 #[test]
 fn test_skiplist() {
-
- let mut v=SkipList::new();
+    
+  let mut v=SkipList::new();
     //  let mut current_p_next=self.root;
   v.insert((1,6));
   assert_eq!(v.find(&1),Some(&6));
@@ -579,7 +569,7 @@ fn test_skiplist() {
   v.remove(&56);
   assert_eq!(v.find(&56),None);
 
-  for i in 100..100000 {
+  for i in 100..1000 {
       v.insert((i,i+1));
   }
 

@@ -202,24 +202,18 @@ impl <T: std::fmt::Debug+Ord> Drop for BSTTree<T> {
   pub fn drop_middle_root<T: std::fmt::Debug+Ord>(root:*mut TreeNode<T>) {
       let layout=Layout::new::<TreeNode<T>>();
       unsafe {
-     
-      
-         let  ss_root=root;
-  
-  
+      let  ss_root=root;
        if !(*ss_root).left.is_null() {
           
           let p_root=(*ss_root).left;
           drop_middle_root(p_root);
       }
   
-          if !(*ss_root).right.is_null() {
+     if !(*ss_root).right.is_null() {
            
               let p_root= (*ss_root).right;
             
-             drop_middle_root(p_root);
-           
-         
+             drop_middle_root(p_root);         
             }
   
          std::ptr::drop_in_place(&mut (*root).data as *mut T);
@@ -231,7 +225,7 @@ impl <T: std::fmt::Debug+Ord> Drop for BSTTree<T> {
 
 //  删除节点操作就不写了，主要看下面红黑树的实现
 
-  //BST存在的主要问题是，数在插入的时候会导致树倾斜，不同的插入顺序会导致树的高度不一样，而树的高度直接的影响了树的查找效率。理想的高度是logN，最坏的情况是所有的节点都在一条斜线上，这样的树的高度为N。
+  //BST存在的主要问题是，数在插入的时候会导致树倾斜，不同的插入顺序会导致树的高度不一样，而树的高度直接的影响了树的查找效率。理想的高度是logN，最坏的情况是所有的节点都在一条斜线上退化成了链表，这样的树的高度为N。
   
   
 
