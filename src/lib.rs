@@ -8,4 +8,5 @@ pub mod maxheap;
 pub mod hashmap;
 pub mod quicksortbinarysearch;
 pub mod time;
+pub mod mutex;
 

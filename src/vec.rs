@@ -299,7 +299,7 @@ impl<T> DerefMut for ManVec<T> {
 
 
 unsafe impl<T:Send+Sync> Send for ManVec<T> {}
-//unsafe impl<T:Send+Sync>  Sync for ManVec<T> {}
+unsafe impl<T:Send+Sync>  Sync for ManVec<T> {}
 
 
 #[test]
